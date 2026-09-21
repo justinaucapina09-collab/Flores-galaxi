@@ -2,359 +2,814 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Flores hacia la galaxia</title>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Flores hacia la galaxia ✨</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
 html,body{
- margin:0;
- width:100%;
- height:100%;
- overflow:hidden;
- background:#02020b;
- font-family:Arial,sans-serif;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#020008;
+    touch-action:none;
 }
 
 canvas{
- display:block;
- width:100%;
- height:100%;
- touch-action:none;
+    display:block;
+    width:100%;
+    height:100%;
 }
 
-#hint{
- position:fixed;
- left:50%;
- bottom:24px;
- transform:translateX(-50%);
- color:white;
- background:rgba(0,0,0,.45);
- padding:10px 16px;
- border-radius:22px;
- font-size:14px;
- text-align:center;
+#texto{
+    position:fixed;
+    left:50%;
+    bottom:28px;
+    transform:translateX(-50%);
+    color:white;
+    font-family:Arial,sans-serif;
+    font-size:14px;
+    padding:10px 18px;
+    border-radius:30px;
+    background:rgba(0,0,0,.35);
+    backdrop-filter:blur(5px);
+    opacity:.85;
+    transition:opacity 2s;
+    pointer-events:none;
+    white-space:nowrap;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="c"></canvas>
+<canvas id="canvas"></canvas>
 
-<div id="hint">
-Arrastra con el dedo o mouse ✨
+<div id="texto">
+    Desliza para explorar ✨
 </div>
 
 <script>
 
-const c=document.getElementById("c");
-const x=c.getContext("2d");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-let W,H,dpr;
-let px=0,py=0;
-let down=false;
+let W = 0;
+let H = 0;
+let DPR = 1;
 
 function resize(){
 
- dpr=Math.min(devicePixelRatio||1,2);
+    DPR = Math.min(window.devicePixelRatio || 1,2);
 
- W=innerWidth;
- H=innerHeight;
+    W = window.innerWidth;
+    H = window.innerHeight;
 
- c.width=W*dpr;
- c.height=H*dpr;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
 
- x.setTransform(dpr,0,0,dpr,0,0);
+    canvas.style.width = W+"px";
+    canvas.style.height = H+"px";
+
+    ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 
-addEventListener("resize",resize);
+window.addEventListener("resize",resize);
 resize();
 
-const stars=Array.from({length:420},()=>({
- a:Math.random()*Math.PI*2,
- r:Math.random(),
- s:.2+Math.random()*1.4
-}));
 
-const flowers=Array.from({length:65},()=>({
- x:Math.random(),
- y:.72+Math.random()*.3,
- size:8+Math.random()*16,
- phase:Math.random()*6.28,
- speed:.2+Math.random()*.7
-}));
+/* =========================
+   FLORES
+========================= */
 
-function flower(f,t,fade){
+const flowers = [];
 
- let X=f.x*W+
- Math.sin(t*f.speed+f.phase)*12;
+for(let i=0;i<100;i++){
 
- let Y=f.y*H-
- Math.max(0,t-1.2)*H*.045;
+    flowers.push({
 
- let S=f.size*
- (1+Math.max(0,t-1.2)*.6);
+        x:(Math.random()-.5)*2.5,
 
- x.save();
+        y:Math.random(),
 
- x.globalAlpha=Math.max(0,fade);
+        z:Math.random(),
 
- x.translate(X,Y);
+        size:8+Math.random()*18,
 
- x.rotate(Math.sin(t+f.phase)*.08);
+        rotation:Math.random()*Math.PI*2,
 
- x.strokeStyle="rgba(80,160,80,.7)";
- x.lineWidth=2;
+        speed:.15+Math.random()*.5,
 
- x.beginPath();
- x.moveTo(0,S*1.8);
- x.lineTo(0,0);
- x.stroke();
+        phase:Math.random()*Math.PI*2,
 
- for(let i=0;i<6;i++){
+        hue:320+Math.random()*30
 
-  let a=i*Math.PI/3;
-
-  x.fillStyle=
-  `hsl(${320+i*7},85%,70%)`;
-
-  x.beginPath();
-
-  x.ellipse(
-   Math.cos(a)*S*.48,
-   Math.sin(a)*S*.48,
-   S*.42,
-   S*.72,
-   a,
-   0,
-   Math.PI*2
-  );
-
-  x.fill();
- }
-
- x.fillStyle="#ffd84d";
-
- x.beginPath();
- x.arc(0,0,S*.27,0,Math.PI*2);
- x.fill();
-
- x.restore();
+    });
 }
+
+
+/* =========================
+   ESTRELLAS
+========================= */
+
+const stars=[];
+
+for(let i=0;i<900;i++){
+
+    stars.push({
+
+        x:(Math.random()-.5)*2,
+
+        y:(Math.random()-.5)*1.2,
+
+        z:Math.random(),
+
+        size:.4+Math.random()*2,
+
+        angle:Math.random()*Math.PI*2,
+
+        radius:Math.random(),
+
+        speed:.1+Math.random()*.8
+
+    });
+}
+
+
+/* =========================
+   POLVO GALÁCTICO
+========================= */
+
+const dust=[];
+
+for(let i=0;i<350;i++){
+
+    dust.push({
+
+        angle:Math.random()*Math.PI*2,
+
+        radius:Math.pow(Math.random(),.55),
+
+        z:Math.random(),
+
+        size:.4+Math.random()*1.8,
+
+        offset:Math.random()*Math.PI*2
+
+    });
+}
+
+
+/* =========================
+   CONTROL
+========================= */
+
+let targetX=0;
+let targetY=0;
+
+let camX=0;
+let camY=0;
+
+let dragging=false;
+let lastX=0;
+let lastY=0;
+
+canvas.addEventListener("pointerdown",e=>{
+
+    dragging=true;
+
+    lastX=e.clientX;
+    lastY=e.clientY;
+
+});
+
+canvas.addEventListener("pointermove",e=>{
+
+    if(!dragging)return;
+
+    const dx=e.clientX-lastX;
+    const dy=e.clientY-lastY;
+
+    targetX += dx*.0025;
+    targetY += dy*.0025;
+
+    targetX=Math.max(-.45,Math.min(.45,targetX));
+    targetY=Math.max(-.35,Math.min(.35,targetY));
+
+    lastX=e.clientX;
+    lastY=e.clientY;
+
+});
+
+window.addEventListener("pointerup",()=>{
+
+    dragging=false;
+
+});
+
+
+/* =========================
+   DIBUJAR FLOR
+========================= */
+
+function drawFlower(f,t,progress){
+
+    /*
+       Perspectiva:
+       Las flores grandes están cerca.
+    */
+
+    let depth = .15 + f.z*.85;
+
+    let spread = 1 + progress*1.5;
+
+    let worldX =
+        f.x * W*.45 * spread;
+
+    let worldY =
+        H*.82 +
+        f.y*H*.18 -
+        progress*H*.9;
+
+    /*
+       movimiento natural
+    */
+
+    worldX +=
+        Math.sin(t*f.speed + f.phase)*12*depth;
+
+    worldY +=
+        Math.sin(t*.7+f.phase)*5;
+
+    /*
+       perspectiva
+    */
+
+    let scale =
+        (.35 + depth*1.7) *
+        (1-progress*.45);
+
+    let size=f.size*scale;
+
+    let screenX =
+        W/2 +
+        worldX +
+        targetX*depth*W*.8;
+
+    let screenY =
+        worldY +
+        targetY*depth*H*.5;
+
+    /*
+       cuando llega la galaxia,
+       las flores desaparecen
+    */
+
+    let alpha =
+        Math.max(
+            0,
+            1-progress*1.25
+        );
+
+    if(alpha<=0)return;
+
+    ctx.save();
+
+    ctx.globalAlpha=alpha;
+
+    ctx.translate(screenX,screenY);
+
+    ctx.rotate(
+        f.rotation+
+        Math.sin(t*.5+f.phase)*.08
+    );
+
+    /*
+       tallo
+    */
+
+    ctx.strokeStyle="rgba(65,150,65,.8)";
+    ctx.lineWidth=Math.max(1,size*.08);
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,size*3.5);
+    ctx.quadraticCurveTo(
+        size*.2,
+        size*1.5,
+        0,
+        0
+    );
+
+    ctx.stroke();
+
+
+    /*
+       hojas
+    */
+
+    ctx.fillStyle="rgba(50,130,60,.9)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        -size*.55,
+        size*2,
+        size*.55,
+        size*.22,
+        -.4,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        size*.5,
+        size*1.45,
+        size*.55,
+        size*.22,
+        .4,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /*
+       pétalos
+    */
+
+    for(let i=0;i<7;i++){
+
+        const a=i*Math.PI*2/7;
+
+        const px=Math.cos(a)*size*.72;
+        const py=Math.sin(a)*size*.72;
+
+        const grad=ctx.createRadialGradient(
+            px,
+            py,
+            0,
+            px,
+            py,
+            size*.8
+        );
+
+        grad.addColorStop(
+            0,
+            `hsla(${f.hue},100%,90%,1)`
+        );
+
+        grad.addColorStop(
+            .65,
+            `hsla(${f.hue},90%,70%,.95)`
+        );
+
+        grad.addColorStop(
+            1,
+            `hsla(${f.hue},80%,45%,.1)`
+        );
+
+        ctx.fillStyle=grad;
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+            px,
+            py,
+            size*.43,
+            size*.75,
+            a,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+
+
+    /*
+       centro amarillo
+    */
+
+    ctx.fillStyle="#ffd95a";
+
+    ctx.shadowBlur=size*.6;
+    ctx.shadowColor="#ffd95a";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        size*.3,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+}
+
+
+/* =========================
+   GALAXIA
+========================= */
+
+function drawGalaxy(t,progress){
+
+    if(progress<=0)return;
+
+    /*
+       aparición suave
+    */
+
+    let alpha=Math.min(1,progress*1.4);
+
+    ctx.save();
+
+    ctx.translate(
+        W/2 + camX + targetX*W*.25,
+        H/2 + camY + targetY*H*.2
+    );
+
+    /*
+       núcleo
+    */
+
+    const maxR=Math.min(W,H)*.55;
+
+    let glow=ctx.createRadialGradient(
+        0,0,0,
+        0,0,maxR
+    );
+
+    glow.addColorStop(
+        0,
+        `rgba(255,245,225,${alpha})`
+    );
+
+    glow.addColorStop(
+        .08,
+        `rgba(255,220,180,${alpha*.8})`
+    );
+
+    glow.addColorStop(
+        .25,
+        `rgba(170,110,255,${alpha*.35})`
+    );
+
+    glow.addColorStop(
+        .55,
+        `rgba(60,30,150,${alpha*.12})`
+    );
+
+    glow.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+    ctx.fillStyle=glow;
+
+    ctx.beginPath();
+
+    ctx.arc(0,0,maxR,0,Math.PI*2);
+
+    ctx.fill();
+
+
+    /*
+       estrellas de la galaxia
+    */
+
+    for(const s of stars){
+
+        let r =
+            s.radius *
+            maxR;
+
+        /*
+           brazos espirales
+        */
+
+        let arm =
+            Math.sin(
+                r*.025 +
+                s.angle*2.7 +
+                t*.08
+            )*.55;
+
+        let a =
+            s.angle +
+            arm;
+
+        let x =
+            Math.cos(a)*r;
+
+        let y =
+            Math.sin(a)*r*.38;
+
+        /*
+           perspectiva / movimiento
+        */
+
+        x += targetX*r*.45;
+        y += targetY*r*.25;
+
+        let twinkle =
+            .35+
+            .65*
+            Math.abs(
+                Math.sin(
+                    t*2*s.speed+
+                    s.z*10
+                )
+            );
+
+        let brightness =
+            twinkle*
+            alpha*
+            (1-s.radius*.35);
+
+        ctx.fillStyle=
+            `rgba(225,230,255,${brightness})`;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y,
+            s.size*(.4+alpha),
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+
+
+    /*
+       polvo violeta
+    */
+
+    for(const d of dust){
+
+        let r=d.radius*maxR;
+
+        let a=
+            d.angle+
+            Math.sin(t*.15+d.offset)*.08;
+
+        let x=Math.cos(a)*r;
+        let y=Math.sin(a)*r*.4;
+
+        x+=targetX*r*.5;
+        y+=targetY*r*.25;
+
+        ctx.fillStyle=
+            `rgba(160,100,255,${
+                alpha*.08*(1-d.radius)
+            })`;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y,
+            d.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+
+
+    /*
+       líneas de velocidad
+       al entrar a la galaxia
+    */
+
+    if(progress>.35){
+
+        let speed=(progress-.35)*2;
+
+        for(let i=0;i<70;i++){
+
+            let a=i*2.399;
+
+            let r1=
+                Math.random()*
+                maxR*.25;
+
+            let r2=
+                r1+
+                speed*maxR*(.2+Math.random());
+
+            ctx.strokeStyle=
+                `rgba(255,255,255,${
+                    speed*.12
+                })`;
+
+            ctx.lineWidth=.7;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                Math.cos(a)*r1,
+                Math.sin(a)*r1*.4
+            );
+
+            ctx.lineTo(
+                Math.cos(a)*r2,
+                Math.sin(a)*r2*.4
+            );
+
+            ctx.stroke();
+        }
+    }
+
+    ctx.restore();
+}
+
+
+/* =========================
+   FONDO
+========================= */
+
+function background(){
+
+    let g=ctx.createLinearGradient(
+        0,0,0,H
+    );
+
+    g.addColorStop(0,"#010008");
+    g.addColorStop(.5,"#030014");
+    g.addColorStop(1,"#090018");
+
+    ctx.fillStyle=g;
+
+    ctx.fillRect(0,0,W,H);
+}
+
+
+/* =========================
+   ANIMACIÓN
+========================= */
 
 let start=performance.now();
 
-function draw(now){
+function animate(now){
 
- let t=(now-start)/1000;
+    let time=(now-start)/1000;
 
- let cycle=22;
- let q=t%cycle;
+    /*
+       ciclo de 30 segundos
 
- let galaxy=q>7?q-7:0;
+       0-8   flores
+       8-18  transformación
+       18-30 galaxia
+    */
 
- let g=Math.min(
-  1,
-  Math.max(0,(q-7)/5)
- );
+    const cycle=30;
 
- let sky=x.createLinearGradient(0,0,0,H);
+    let t=time%cycle;
 
- sky.addColorStop(0,"#01010a");
- sky.addColorStop(1,"#070014");
+    let transition;
 
- x.fillStyle=sky;
- x.fillRect(0,0,W,H);
+    if(t<8){
 
- /*
- GALAXIA
- */
+        transition=0;
 
- x.save();
+    }else{
 
- x.translate(
-  W/2+px,
-  H/2+py
- );
+        transition=
+            Math.min(
+                1,
+                (t-8)/7
+            );
+    }
 
- for(const s of stars){
 
-  let spin=.15*galaxy+s.a;
+    /*
+       movimiento automático
+       de cámara
+    */
 
-  let rr=
-   (s.r*.85+.08)*
-   Math.min(W,H)*.72;
+    let autoProgress=
+        Math.max(
+            0,
+            Math.min(
+                1,
+                (t-5)/10
+            )
+        );
 
-  let xx=Math.cos(spin)*rr;
-  let yy=Math.sin(spin)*rr*.38;
+    camX=
+        Math.sin(time*.18)*
+        W*.015*
+        autoProgress;
 
-  let tw=
-   .35+
-   .65*Math.abs(
-    Math.sin(now*.002*s.s+s.r*9)
-   );
+    camY=
+        Math.cos(time*.15)*
+        H*.01*
+        autoProgress;
 
-  x.fillStyle=
-   `rgba(220,225,255,${tw*g})`;
 
-  x.beginPath();
+    background();
 
-  x.arc(
-   xx,
-   yy,
-   Math.max(.5,s.s*g),
-   0,
-   Math.PI*2
-  );
 
-  x.fill();
- }
+    /*
+       pequeñas estrellas de fondo
+    */
 
- let glow=x.createRadialGradient(
-  0,0,0,
-  0,0,
-  Math.min(W,H)*.35
- );
+    if(transition>.05){
 
- glow.addColorStop(
-  0,
-  `rgba(255,245,220,${.95*g})`
- );
+        ctx.save();
 
- glow.addColorStop(
-  .18,
-  `rgba(150,100,255,${.35*g})`
- );
+        ctx.globalAlpha=
+            transition*.35;
 
- glow.addColorStop(
-  1,
-  "rgba(0,0,0,0)"
- );
+        for(let i=0;i<120;i++){
 
- x.fillStyle=glow;
+            let sx=
+                (i*97)%W;
 
- x.beginPath();
+            let sy=
+                (i*53)%H;
 
- x.arc(
-  0,
-  0,
-  Math.min(W,H)*.38,
-  0,
-  Math.PI*2
- );
+            ctx.fillStyle="white";
 
- x.fill();
+            ctx.beginPath();
 
- x.restore();
+            ctx.arc(
+                sx,
+                sy,
+                .5,
+                0,
+                Math.PI*2
+            );
 
- /*
- FLORES
- */
+            ctx.fill();
+        }
 
- let flowerFade=
-  q<7
-  ?1
-  :Math.max(0,1-(q-7)/4);
+        ctx.restore();
+    }
 
- flowers.forEach(
-  f=>flower(f,t,flowerFade)
- );
 
- /*
- EFECTO DE VIAJE
- */
+    /*
+       flores
+    */
 
- if(q>7){
+    for(const f of flowers){
 
-  x.save();
+        drawFlower(
+            f,
+            time,
+            transition
+        );
+    }
 
-  x.translate(
-   W/2+px,
-   H/2+py
-  );
 
-  for(let i=0;i<35;i++){
+    /*
+       galaxia
+    */
 
-   let z=
-    ((i/35)+(galaxy*.13))%1;
+    drawGalaxy(
+        time,
+        transition
+    );
 
-   let r=
-    z*z*Math.max(W,H);
 
-   let a=
-    i*2.399+
-    galaxy*.7;
+    /*
+       texto
+    */
 
-   x.strokeStyle=
-    `rgba(255,255,255,
-    ${g*(1-z)*.16})`;
+    if(time>5){
 
-   x.lineWidth=1;
+        document.getElementById("texto").style.opacity="0";
 
-   x.beginPath();
+    }
 
-   x.moveTo(
-    Math.cos(a)*r*.03,
-    Math.sin(a)*r*.03
-   );
 
-   x.lineTo(
-    Math.cos(a)*r,
-    Math.sin(a)*r
-   );
-
-   x.stroke();
-  }
-
-  x.restore();
- }
-
- requestAnimationFrame(draw);
+    requestAnimationFrame(animate);
 }
 
-requestAnimationFrame(draw);
-
-/*
- CONTROL CON DEDO/MOUSE
- */
-
-function move(X,Y){
-
- px+=(X-W/2-px)*.035;
- py+=(Y-H/2-py)*.035;
-}
-
-c.addEventListener(
- "pointerdown",
- e=>{
-  down=true;
- }
-);
-
-c.addEventListener(
- "pointermove",
- e=>{
-  if(down) move(e.clientX,e.clientY);
- }
-);
-
-addEventListener(
- "pointerup",
- ()=>{
-  down=false;
- }
-);
-
-setTimeout(
- ()=>{
-  document.getElementById("hint").style.opacity=0;
- },
- 4500
-);
+requestAnimationFrame(animate);
 
 </script>
 
 </body>
-  </html>
+</html>
